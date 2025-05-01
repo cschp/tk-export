@@ -6,43 +6,27 @@ from sys import exit
 import json
 from typing import Dict, List, Tuple, Optional, Any
 
+from structs import *
+from tk_export import structs
+
 export_dir = 'exported-data'  # Saved files end up here. Relative to script.
 sleep_delay = 0.5  # seconds between request, to be polite to the site.
 
 host = 'https://www.tavern-keeper.com'
 headers = {'accept': 'application/json', 'X-CSRF-Token': 'something'}
 
-def load_settings() -> Tuple[str, Dict[str, str], Optional[List[str]]]:
-    """
-    Load settings from environment variables using python-dotenv.
-    
-    Returns:
-        Tuple containing:
-        - User ID
-        - Cookies dictionary
-        - List of completed campaigns (if any)
-    """
+def load_settings() -> structs.Settings:
     import dotenv
     dotenv.load_dotenv()
 
-    uid = os.environ.get('TK_USER_ID')
-    if not uid:
-        print("User ID not provided in .env")
+    settings = structs.Settings(
+        UserID=os.environ.get('TK_USER_ID', ''),
+        Cookie=os.environ.get('TK_COOKIE', ''),
+        Campaigns=os.environ.get('TK_done_campaigns', '').split(','),
+    )
 
-    cookie_value = os.environ.get('TK_COOKIE')
-    if not cookie_value:
-        print("cookie not provided in .env")
-        cookie_value = ''
-    cookies = {'tavern-keeper': cookie_value}
+    return settings
 
-    if not uid or not cookie_value:
-        exit(1)
-
-    done_campaigns = os.environ.get('TK_done_campaigns')
-    if done_campaigns:
-        done_campaigns = done_campaigns.split(",")
-
-    return uid, cookies, done_campaigns
 
 def merge(old: Dict[str, Any], new: Dict[str, Any]) -> None:
     """
